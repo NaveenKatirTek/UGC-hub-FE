@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Icon from '../../components/AppIcon';
-import Button from '../../components/ui/Button';
-import RoleAdaptiveNavbar from '../../components/ui/RoleAdaptiveNavbar';
-import BreadcrumbNavigation from '../../components/ui/BreadcrumbNavigation';
+import Icon from '../../../components/AppIcon';
+import Button from '../../../components/ui/Button';
+import RoleAdaptiveNavbar from '../../../components/ui/RoleAdaptiveNavbar';
+import BreadcrumbNavigation from '../../../components/ui/BreadcrumbNavigation';
 import OverviewCard from './components/OverviewCard';
 import CampaignCard from './components/CampaignCard';
 import QuickInsightsChart from './components/QuickInsightsChart';

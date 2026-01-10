@@ -1,6 +1,6 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts';
-import Icon from '../../../components/AppIcon';
+import Icon from '../../../../components/AppIcon';
 
 const QuickInsightsChart = ({ 
   data = [],

@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Routes as RouterRoutes, Route } from "react-router-dom";
+import { BrowserRouter, Routes as RouterRoutes, Route, Navigate } from "react-router-dom";
 
 import ScrollToTop from "components/ScrollToTop";
 import ErrorBoundary from "components/ErrorBoundary";
@@ -13,15 +13,19 @@ import RegisterStep2 from "./pages/register-step-2";
 import UserVerification from "./pages/usermail-verification"; // Updated import from your first file
 
 /* Brand & Creator */
-import BrandDashboard from "./pages/brand-dashboard";
 import CreatorDashboard from "./pages/creator-dashboard";
+import BrandLayout from "./pages/brand/layout";
+import BrandDashboard from "./pages/brand/Dashboard";
+import CampaignList from "./pages/brand/Campaigns";
+import CreateCampaign from "./pages/brand/Campaigns/CreateCampaign";
+import BrandWallet from "./pages/brand/Wallet";
 
 /* Admin Panel */
 import AdminDashboard from "./pages/admin-dashboard";
 import CampaignCreation from "./pages/campaign-creation";
-import CampaignDetails from "./pages/campaign-details";
-import SubscriptionManagement from "./pages/subscription-management";
-import MessagingCenter from "./pages/messaging-center";
+// import CampaignDetails from "./pages/campaign-details";
+// import SubscriptionManagement from "./pages/subscription-management";
+// import MessagingCenter from "./pages/messaging-center";
 
 const Routes = () => {
   return (
@@ -42,12 +46,21 @@ const Routes = () => {
           <Route path="/brand-dashboard" element={<BrandDashboard />} />
           <Route path="/creator-dashboard" element={<CreatorDashboard />} />
 
+          {/* Brand Routes */}
+        <Route path="/brand" element={<BrandLayout />}>
+          <Route index element={<Navigate to="/brand/dashboard" replace />} />
+          <Route path="dashboard" element={<BrandDashboard />} />
+          <Route path="campaigns" element={<CampaignList />} />
+          <Route path="campaigns/new" element={<CreateCampaign />} />
+          <Route path="wallet" element={<BrandWallet />} />
+          <Route path="settings" element={<div>Settings Placeholder</div>} />
+        </Route>
           {/* Admin Section */}
-          <Route path="/admin-dashboard" element={<AdminDashboard />} />
-          <Route path="/campaign-creation" element={<CampaignCreation />} />
-          <Route path="/campaign-details" element={<CampaignDetails />} />
-          <Route path="/subscription-management" element={<SubscriptionManagement />} />
-          <Route path="/messaging-center" element={<MessagingCenter />} />
+{/*           <Route path="/admin-dashboard" element={<AdminDashboard />} /> */}
+{/*           <Route path="/campaign-creation" element={<CampaignCreation />} /> */}
+{/*           <Route path="/campaign-details" element={<CampaignDetails />} /> */}
+{/*           <Route path="/subscription-management" element={<SubscriptionManagement />} /> */}
+{/*           <Route path="/messaging-center" element={<MessagingCenter />} /> */}
 
           {/* 404 Fallback */}
           <Route path="*" element={<NotFound />} />
