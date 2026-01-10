@@ -1,170 +1,124 @@
-import React, { useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import React, { useState, forwardRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import Icon from '../AppIcon';
-import Button from './Button';
+import { cn } from '../../utils/cn';
 
-const Header = ({ onMenuToggle, userRole = 'brand' }) => {
-  const location = useLocation();
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
+const Input = forwardRef(({
+  type = 'text',
+  label,
+  placeholder,
+  value,
+  onChange,
+  onBlur,
+  onFocus,
+  error,
+  helperText,
+  required = false,
+  disabled = false,
+  className = '',
+  icon,
+  iconPosition = 'left',
+  showPasswordToggle = false,
+  fullWidth = true,
+  ...props
+}, ref) => {
+  const [isFocused, setIsFocused] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  
+  const inputType = type === 'password' && showPassword ? 'text' : type;
 
-  const navigationItems = [
-    { 
-      label: 'Campaigns', 
-      path: '/campaign-creation',
-      icon: 'Target',
-      roles: ['brand', 'creator', 'admin']
-    },
-    { 
-      label: 'Messages', 
-      path: '/messaging-center',
-      icon: 'MessageSquare',
-      roles: ['brand', 'creator', 'admin'],
-      badge: 3
-    },
-    { 
-      label: 'Billing', 
-      path: '/subscription-management',
-      icon: 'CreditCard',
-      roles: ['brand', 'creator', 'admin']
-    },
-    { 
-      label: 'Admin', 
-      path: '/admin-dashboard',
-      icon: 'Shield',
-      roles: ['admin']
-    }
-  ];
-
-  const visibleItems = navigationItems?.filter(item => 
-    item?.roles?.includes(userRole)
-  )?.slice(0, 4);
-
-  const handleNavigation = (path) => {
-    window.location.href = path;
+  const handleFocus = (e) => {
+    setIsFocused(true);
+    if (onFocus) onFocus(e);
   };
 
-  const handleProfileToggle = () => {
-    setIsProfileOpen(!isProfileOpen);
+  const handleBlur = (e) => {
+    setIsFocused(false);
+    if (onBlur) onBlur(e);
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-card border-b border-border shadow-soft">
-      <div className="flex items-center justify-between h-16 px-6">
-        {/* Logo and Mobile Menu */}
-        <div className="flex items-center space-x-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onMenuToggle}
-            className="lg:hidden"
-          >
-            <Icon name="Menu" size={20} />
-          </Button>
-          
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center">
-              <Icon name="Zap" size={18} color="white" />
-            </div>
-            <span className="text-lg font-semibold text-foreground hidden sm:block">
-              UGC Hub
-            </span>
+    <div className={cn('relative', fullWidth && 'w-full', className)}>
+      {label && (
+        <label className="block text-sm font-medium text-foreground mb-2">
+          {label}
+          {required && <span className="text-destructive ml-1">*</span>}
+        </label>
+      )}
+      
+      <div className="relative">
+        {icon && iconPosition === 'left' && (
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+            <Icon name={icon} size={18} className="text-muted-foreground" />
           </div>
-        </div>
-
-        {/* Desktop Navigation */}
-        <nav className="hidden lg:flex items-center space-x-1">
-          {visibleItems?.map((item) => {
-            const isActive = location?.pathname === item?.path || 
-              (item?.path === '/campaign-creation' && location?.pathname === '/campaign-details');
-            
-            return (
-              <div key={item?.path} className="relative">
-                <Button
-                  variant={isActive ? "default" : "ghost"}
-                  onClick={() => handleNavigation(item?.path)}
-                  className="relative px-4 py-2 text-sm font-medium transition-smooth"
-                >
-                  <Icon name={item?.icon} size={16} className="mr-2" />
-                  {item?.label}
-                  {item?.badge && (
-                    <span className="absolute -top-1 -right-1 bg-accent text-accent-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
-                      {item?.badge > 99 ? '99+' : item?.badge}
-                    </span>
-                  )}
-                </Button>
-              </div>
-            );
-          })}
-        </nav>
-
-        {/* User Profile */}
-        <div className="relative">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleProfileToggle}
-            className="relative"
-          >
-            <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
-              <Icon name="User" size={16} />
-            </div>
-          </Button>
-
-          {isProfileOpen && (
-            <div className="absolute right-0 top-12 w-48 bg-popover border border-border rounded-lg shadow-elevated py-2 z-50">
-              <div className="px-4 py-2 border-b border-border">
-                <p className="text-sm font-medium text-foreground">John Doe</p>
-                <p className="text-xs text-muted-foreground capitalize">{userRole}</p>
-              </div>
-              <div className="py-1">
-                <button className="w-full px-4 py-2 text-left text-sm text-foreground hover:bg-muted transition-smooth flex items-center">
-                  <Icon name="Settings" size={14} className="mr-2" />
-                  Settings
-                </button>
-                <button className="w-full px-4 py-2 text-left text-sm text-foreground hover:bg-muted transition-smooth flex items-center">
-                  <Icon name="HelpCircle" size={14} className="mr-2" />
-                  Help
-                </button>
-                <div className="border-t border-border my-1"></div>
-                <button className="w-full px-4 py-2 text-left text-sm text-error hover:bg-muted transition-smooth flex items-center">
-                  <Icon name="LogOut" size={14} className="mr-2" />
-                  Sign Out
-                </button>
-              </div>
-            </div>
+        )}
+        
+        <input
+          ref={ref}
+          type={inputType}
+          value={value}
+          onChange={onChange}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          placeholder={placeholder}
+          disabled={disabled}
+          required={required}
+          className={cn(
+            'w-full px-4 py-2.5 rounded-lg border transition-all duration-200',
+            'bg-background text-foreground placeholder:text-muted-foreground',
+            'focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary',
+            icon && iconPosition === 'left' && 'pl-10',
+            (icon && iconPosition === 'right') || (type === 'password' && showPasswordToggle) ? 'pr-10' : '',
+            error && 'border-destructive focus:border-destructive focus:ring-destructive/20',
+            !error && !isFocused && 'border-border',
+            disabled && 'opacity-50 cursor-not-allowed bg-muted',
+            isFocused && !error && 'border-primary shadow-sm'
           )}
-        </div>
-      </div>
-      {/* Mobile Navigation Overlay */}
-      <div className="lg:hidden">
-        <nav className="border-t border-border bg-card">
-          <div className="px-4 py-2 space-y-1">
-            {visibleItems?.map((item) => {
-              const isActive = location?.pathname === item?.path || 
-                (item?.path === '/campaign-creation' && location?.pathname === '/campaign-details');
-              
-              return (
-                <Button
-                  key={item?.path}
-                  variant={isActive ? "default" : "ghost"}
-                  onClick={() => handleNavigation(item?.path)}
-                  className="w-full justify-start relative"
-                >
-                  <Icon name={item?.icon} size={16} className="mr-3" />
-                  {item?.label}
-                  {item?.badge && (
-                    <span className="ml-auto bg-accent text-accent-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
-                      {item?.badge > 99 ? '99+' : item?.badge}
-                    </span>
-                  )}
-                </Button>
-              );
-            })}
+          {...props}
+        />
+        
+        {icon && iconPosition === 'right' && !showPasswordToggle && (
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+            <Icon name={icon} size={18} className="text-muted-foreground" />
           </div>
-        </nav>
+        )}
+        
+        {type === 'password' && showPasswordToggle && (
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+            tabIndex={-1}
+          >
+            <Icon name={showPassword ? 'EyeOff' : 'Eye'} size={18} />
+          </button>
+        )}
       </div>
-    </header>
+      
+      <AnimatePresence mode="wait">
+        {(error || helperText) && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.15 }}
+            className="mt-1.5"
+          >
+            {error ? (
+              <div className="flex items-center gap-1.5">
+                <Icon name="AlertCircle" size={14} className="text-destructive flex-shrink-0" />
+                <p className="text-sm text-destructive">{error}</p>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">{helperText}</p>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
-};
+});
 
-export default Header;
+Input.displayName = 'Input';
+
+export default Input;

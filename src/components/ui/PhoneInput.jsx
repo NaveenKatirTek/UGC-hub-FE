@@ -1,41 +1,43 @@
 import React, { useState } from 'react';
-import Select from './Select';
-import Input from './Input';
+import { motion, AnimatePresence } from 'framer-motion';
 import Icon from '../AppIcon';
+import { cn } from '../../utils/cn';
 
 const PhoneInput = ({
   label,
-  value = {},
+  value = '',
   onChange,
   error,
   required = false,
   placeholder = 'Enter phone number',
-  className = ''
+  className = '',
+  disabled = false
 }) => {
-  const countryCodes = [
-    { value: '+1', label: '🇺🇸 +1 (US)', flag: '🇺🇸' },
-    { value: '+44', label: '🇬🇧 +44 (UK)', flag: '🇬🇧' },
-    { value: '+91', label: '🇮🇳 +91 (IN)', flag: '🇮🇳' },
-    { value: '+61', label: '🇦🇺 +61 (AU)', flag: '🇦🇺' },
-    { value: '+81', label: '🇯🇵 +81 (JP)', flag: '🇯🇵' },
-    { value: '+86', label: '🇨🇳 +86 (CN)', flag: '🇨🇳' },
-    { value: '+49', label: '🇩🇪 +49 (DE)', flag: '🇩🇪' },
-    { value: '+33', label: '🇫🇷 +33 (FR)', flag: '🇫🇷' },
-    { value: '+971', label: '🇦🇪 +971 (AE)', flag: '🇦🇪' },
-    { value: '+65', label: '🇸🇬 +65 (SG)', flag: '🇸🇬' }
-  ];
+  const [isFocused, setIsFocused] = useState(false);
+  const [countryCode, setCountryCode] = useState('+91');
 
-  const handleCountryCodeChange = (code) => {
-    onChange?.({ ...value, countryCode: code });
-  };
+  const countryCodes = [
+    { value: '+1', label: 'US', flag: '🇺🇸' },
+    { value: '+44', label: 'UK', flag: '🇬🇧' },
+    { value: '+91', label: 'IN', flag: '🇮🇳' },
+    { value: '+61', label: 'AU', flag: '🇦🇺' },
+    { value: '+81', label: 'JP', flag: '🇯🇵' },
+    { value: '+86', label: 'CN', flag: '🇨🇳' },
+    { value: '+49', label: 'DE', flag: '🇩🇪' },
+    { value: '+33', label: 'FR', flag: '🇫🇷' },
+    { value: '+971', label: 'AE', flag: '🇦🇪' },
+    { value: '+65', label: 'SG', flag: '🇸🇬' }
+  ];
 
   const handleNumberChange = (e) => {
     const number = e?.target?.value?.replace(/[^0-9]/g, '');
-    onChange?.({ ...value, number });
+    onChange?.(number);
   };
 
+  const selectedCountry = countryCodes.find(c => c.value === countryCode) || countryCodes[2];
+
   return (
-    <div className={className}>
+    <div className={cn('relative', className)}>
       {label && (
         <label className="block text-sm font-medium text-foreground mb-2">
           {label}
@@ -44,33 +46,77 @@ const PhoneInput = ({
       )}
       
       <div className="flex gap-2">
-        <div className="w-32">
-          <Select
-            options={countryCodes}
-            value={value?.countryCode || '+91'}
-            onChange={handleCountryCodeChange}
-            placeholder="+1"
-            searchable
-          />
+        {/* Country Code Selector */}
+        <div className="relative">
+          <select
+            value={countryCode}
+            onChange={(e) => setCountryCode(e.target.value)}
+            disabled={disabled}
+            className={cn(
+              'h-full px-3 py-2.5 rounded-lg border bg-background text-foreground',
+              'focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary',
+              'transition-all duration-200 appearance-none pr-8',
+              error && 'border-destructive focus:border-destructive focus:ring-destructive/20',
+              !error && 'border-border',
+              disabled && 'opacity-50 cursor-not-allowed bg-muted'
+            )}
+          >
+            {countryCodes.map((country) => (
+              <option key={country.value} value={country.value}>
+                {country.flag} {country.value}
+              </option>
+            ))}
+          </select>
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none">
+            <Icon name="ChevronDown" size={16} className="text-muted-foreground" />
+          </div>
         </div>
-        
-        <div className="flex-1">
-          <Input
+
+        {/* Phone Number Input */}
+        <div className="flex-1 relative">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+            <Icon name="Phone" size={18} className="text-muted-foreground" />
+          </div>
+          
+          <input
             type="tel"
-            value={value?.number || ''}
+            value={value}
             onChange={handleNumberChange}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
             placeholder={placeholder}
+            disabled={disabled}
+            required={required}
             maxLength={10}
+            className={cn(
+              'w-full pl-10 pr-4 py-2.5 rounded-lg border transition-all duration-200',
+              'bg-background text-foreground placeholder:text-muted-foreground',
+              'focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary',
+              error && 'border-destructive focus:border-destructive focus:ring-destructive/20',
+              !error && !isFocused && 'border-border',
+              disabled && 'opacity-50 cursor-not-allowed bg-muted',
+              isFocused && !error && 'border-primary shadow-sm'
+            )}
           />
         </div>
       </div>
-
-      {error && (
-        <p className="mt-1 text-sm text-destructive flex items-center gap-1">
-          <Icon name="AlertCircle" size={14} />
-          {error}
-        </p>
-      )}
+      
+      <AnimatePresence mode="wait">
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.15 }}
+            className="mt-1.5"
+          >
+            <div className="flex items-center gap-1.5">
+              <Icon name="AlertCircle" size={14} className="text-destructive flex-shrink-0" />
+              <p className="text-sm text-destructive">{error}</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

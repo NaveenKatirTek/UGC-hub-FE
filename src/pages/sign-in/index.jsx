@@ -4,15 +4,17 @@ import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet';
 import Header from '../../components/ui/Header';
 import LoginCard from './components/LoginCard';
-import api from '../../utils/api'; // Import your Axios instance
+import ForgotPasswordModal from './components/ForgotPasswordModal';
+import api from '../../utils/api';
 
 const SignIn = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('brand@example.com'); // Pre-fill for testing
-  const [password, setPassword] = useState('password123'); // Pre-fill for testing
+  const [emailOrPhone, setEmailOrPhone] = useState('');
+  const [password, setPassword] = useState('');
   const [selectedRole, setSelectedRole] = useState('brand');
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   useEffect(() => {
     const savedRole = localStorage.getItem('userRole');
@@ -24,12 +26,14 @@ const SignIn = () => {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!email?.trim()) {
-      newErrors.email = 'Email is required';
-    } 
+    if (!emailOrPhone?.trim()) {
+      newErrors.emailOrPhone = 'Email or phone number is required';
+    }
 
     if (!password?.trim()) {
       newErrors.password = 'Password is required';
+    } else if (password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
     }
 
     setErrors(newErrors);
@@ -47,41 +51,43 @@ const SignIn = () => {
     setErrors({});
 
     try {
-       // Determine endpoint based on role
-       const endpoint = selectedRole === 'brand' ? '/brand/login' : '/creator/login';
-       
-       // Call API
-       const response = await api.post(endpoint, {
-           email,
-           password
-       });
+      // Determine endpoint based on role
+      const endpoint = selectedRole === 'brand' ? '/brand/login' : '/creator/login';
+      
+      // Detect if input is email or phone
+      const isEmail = emailOrPhone.includes('@');
+      const payload = isEmail 
+        ? { email: emailOrPhone, password }
+        : { mobile: emailOrPhone, password };
+      
+      // Call API
+      const response = await api.post(endpoint, payload);
 
-       if (response.data.status === 'success') {
-           const { token, data } = response.data;
-           localStorage.setItem('token', token);
-           localStorage.setItem('userRole', selectedRole);
-           localStorage.setItem('user', JSON.stringify(data.user || data.brand || data.creator));
-           
-           // Redirect based on role
-           const dashboardRoutes = {
-              brand: '/brand/dashboard',
-              creator: '/creator-dashboard'
-           };
-           navigate(dashboardRoutes[selectedRole], { replace: true });
-       }
-
+      if (response.data.status === 'success') {
+        const { token, data } = response.data;
+        localStorage.setItem('token', token);
+        localStorage.setItem('userRole', selectedRole);
+        localStorage.setItem('user', JSON.stringify(data.user || data.brand || data.creator));
+        
+        // Redirect based on role
+        const dashboardRoutes = {
+          brand: '/brand/dashboard',
+          creator: '/creator-dashboard'
+        };
+        navigate(dashboardRoutes[selectedRole], { replace: true });
+      }
     } catch (err) {
-        console.log(err);
-        setErrors({
-            general: err.response?.data?.message || 'Login failed. Please check your credentials.'
-        });
+      console.error('Login error:', err);
+      setErrors({
+        general: err.response?.data?.message || 'Login failed. Please check your credentials.'
+      });
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
   };
 
   const handleForgotPassword = () => {
-    alert('Password reset functionality will be available soon.');
+    setShowForgotPassword(true);
   };
 
   const handleSocialLogin = (provider) => {
@@ -104,8 +110,8 @@ const SignIn = () => {
             className="w-full max-w-md"
           >
             <LoginCard
-              email={email}
-              setEmail={setEmail}
+              emailOrPhone={emailOrPhone}
+              setEmailOrPhone={setEmailOrPhone}
               password={password}
               setPassword={setPassword}
               selectedRole={selectedRole}
@@ -119,6 +125,14 @@ const SignIn = () => {
           </motion.div>
         </div>
       </div>
+
+      {/* Forgot Password Modal */}
+      <ForgotPasswordModal
+        isOpen={showForgotPassword}
+        onClose={() => setShowForgotPassword(false)}
+        selectedRole={selectedRole}
+        api={api}
+      />
     </>
   );
 };

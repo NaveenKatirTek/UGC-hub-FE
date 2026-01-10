@@ -5,17 +5,17 @@ import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
 
 const LoginCard = ({ 
-  email, 
-  setEmail, 
+  emailOrPhone, 
+  setEmailOrPhone,
   password, 
-  setPassword, 
+  setPassword,
   selectedRole, 
-  setSelectedRole, 
+  setSelectedRole,
   errors, 
   isLoading, 
   handleSubmit, 
   handleForgotPassword,
-  handleSocialLogin 
+  handleSocialLogin
 }) => {
   return (
     <motion.div
@@ -31,13 +31,15 @@ const LoginCard = ({
         <h1 className="text-3xl font-bold text-foreground mb-2">Welcome Back</h1>
         <p className="text-muted-foreground">Sign in to continue to your dashboard</p>
       </div>
+      
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Role Selection */}
         <div className="flex gap-3 p-1 bg-muted rounded-lg">
           <button
             type="button"
             onClick={() => setSelectedRole('brand')}
             className={`flex-1 py-2.5 px-4 rounded-md text-sm font-medium transition-base ${
-              selectedRole === 'brand' ?'bg-card text-primary shadow-elevation-1' :'text-muted-foreground hover:text-foreground'
+              selectedRole === 'brand' ? 'bg-card text-primary shadow-elevation-1' : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             <div className="flex items-center justify-center gap-2">
@@ -49,7 +51,7 @@ const LoginCard = ({
             type="button"
             onClick={() => setSelectedRole('creator')}
             className={`flex-1 py-2.5 px-4 rounded-md text-sm font-medium transition-base ${
-              selectedRole === 'creator' ?'bg-card text-primary shadow-elevation-1' :'text-muted-foreground hover:text-foreground'
+              selectedRole === 'creator' ? 'bg-card text-primary shadow-elevation-1' : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             <div className="flex items-center justify-center gap-2">
@@ -59,16 +61,20 @@ const LoginCard = ({
           </button>
         </div>
 
+        {/* Email or Phone Input */}
         <Input
-          type="email"
-          label="Email Address"
-          placeholder="Enter your email"
-          value={email}
-          onChange={(e) => setEmail(e?.target?.value)}
-          error={errors?.email}
+          type="text"
+          label="Email or Phone Number"
+          placeholder="Enter your email or phone number"
+          value={emailOrPhone}
+          onChange={(e) => setEmailOrPhone(e?.target?.value)}
+          error={errors?.emailOrPhone}
+          icon="Mail"
+          iconPosition="left"
           required
         />
 
+        {/* Password Input */}
         <Input
           type="password"
           label="Password"
@@ -76,9 +82,13 @@ const LoginCard = ({
           value={password}
           onChange={(e) => setPassword(e?.target?.value)}
           error={errors?.password}
+          icon="Lock"
+          iconPosition="left"
+          showPasswordToggle={true}
           required
         />
 
+        {/* Remember Me & Forgot Password */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <input
@@ -99,6 +109,7 @@ const LoginCard = ({
           </button>
         </div>
 
+        {/* Error Message */}
         {errors?.general && (
           <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
             <div className="flex items-center gap-2">
@@ -108,6 +119,7 @@ const LoginCard = ({
           </div>
         )}
 
+        {/* Submit Button */}
         <Button
           type="submit"
           variant="default"
@@ -119,6 +131,7 @@ const LoginCard = ({
           Sign In
         </Button>
 
+        {/* Social Login Divider */}
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-border"></div>
@@ -128,6 +141,7 @@ const LoginCard = ({
           </div>
         </div>
 
+        {/* Social Login Buttons */}
         <div className="grid grid-cols-2 gap-3">
           <button
             type="button"
@@ -149,6 +163,7 @@ const LoginCard = ({
           </button>
         </div>
 
+        {/* Sign Up Link */}
         <div className="text-center">
           <p className="text-sm text-muted-foreground">
             Don&apos;t have an account?{' '}
