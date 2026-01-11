@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet';
-import Header from '../../components/ui/Header';
+import Header from '../../components/ui/PublicHeader';
 import AuthStateIndicator from '../../components/ui/AuthStateIndicator';
 import AccountTypeCard from './components/AccountTypeCard';
 import Button from '../../components/ui/Button';
@@ -49,7 +49,7 @@ const RegisterStep1 = () => {
     if (!selectedAccountType) {
       return;
     }
-    navigate('/register-step-2', { state: { accountType: selectedAccountType } });
+    navigate('/register-step-2', { state: { role: selectedAccountType } });
   };
 
   const handleBackToSignIn = () => {

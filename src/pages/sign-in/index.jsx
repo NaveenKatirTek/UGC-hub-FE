@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet';
-import Header from '../../components/ui/Header';
+import Header from '../../components/ui/PublicHeader';
 import LoginCard from './components/LoginCard';
 import ForgotPasswordModal from './components/ForgotPasswordModal';
-import api from '../../utils/api';
+import authService from '../../services/auth.service';
 
 const SignIn = () => {
   const navigate = useNavigate();
@@ -51,35 +51,22 @@ const SignIn = () => {
     setErrors({});
 
     try {
-      // Determine endpoint based on role
-      const endpoint = selectedRole === 'brand' ? '/brand/login' : '/creator/login';
-      
-      // Detect if input is email or phone
-      const isEmail = emailOrPhone.includes('@');
-      const payload = isEmail 
-        ? { email: emailOrPhone, password }
-        : { mobile: emailOrPhone, password };
-      
-      // Call API
-      const response = await api.post(endpoint, payload);
+      // Call authService signin
+      const response = await authService.signin(emailOrPhone, password);
 
-      if (response.data.status === 'success') {
-        const { token, data } = response.data;
-        localStorage.setItem('token', token);
-        localStorage.setItem('userRole', selectedRole);
-        localStorage.setItem('user', JSON.stringify(data.user || data.brand || data.creator));
-        
-        // Redirect based on role
-        const dashboardRoutes = {
-          brand: '/brand/dashboard',
-          creator: '/creator-dashboard'
-        };
-        navigate(dashboardRoutes[selectedRole], { replace: true });
-      }
+      // Store user role
+      localStorage.setItem('userRole', selectedRole);
+      
+      // Redirect based on role
+      const dashboardRoutes = {
+        brand: '/brand/dashboard',
+        creator: '/creator-dashboard'
+      };
+      navigate(dashboardRoutes[selectedRole] || '/dashboard', { replace: true });
     } catch (err) {
       console.error('Login error:', err);
       setErrors({
-        general: err.response?.data?.message || 'Login failed. Please check your credentials.'
+        general: err.message || 'Login failed. Please check your credentials.'
       });
     } finally {
       setIsLoading(false);
@@ -131,7 +118,6 @@ const SignIn = () => {
         isOpen={showForgotPassword}
         onClose={() => setShowForgotPassword(false)}
         selectedRole={selectedRole}
-        api={api}
       />
     </>
   );

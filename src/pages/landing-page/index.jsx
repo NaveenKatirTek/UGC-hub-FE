@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import Header from '../../components/ui/Header';
+import PublicHeader from '../../components/ui/PublicHeader';
 import HeroSection from './components/HeroSection';
 import HowItWorksSection from './components/HowItWorksSection';
 import FeaturesSection from './components/FeaturesSection';
@@ -14,7 +14,7 @@ const LandingPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <PublicHeader />
       
       <main className="pt-16">
         <HeroSection />

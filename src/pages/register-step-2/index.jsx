@@ -1,166 +1,161 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import Header from '../../components/ui/Header';
-
-
-
-import Icon from '../../components/AppIcon';
+import { useFormik } from 'formik';
+import PublicHeader from '../../components/ui/PublicHeader';
 import BrandRegistrationForm from './components/BrandRegistrationForm';
 import CreatorRegistrationForm from './components/CreatorRegistrationForm';
+import { brandRegistrationSchema, creatorRegistrationSchema } from '../../utils/validation/registration.schema';
+import authService from '../../services/auth.service';
 
 const RegisterStep2 = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const selectedRole = location?.state?.role || 'brand';
+  const selectedRole = location.state?.role;
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [apiError, setApiError] = useState('');
 
-  const [formData, setFormData] = useState({
-    // Creator fields
-    name: '',
-    username: '',
-    profileImage: null,
-    mobile: { countryCode: '+91', number: '' },
-    languagesKnown: [],
-    email: '',
-    password: '',
-    confirmPassword: '',
-    address: '',
-    state: '',
-    city: '',
-    categories: [],
-    contentTypes: [],
-    collaborationPrice: '',
-    instagramUsername: '',
-    instagramProfile: '',
-    instagramFollowers: '',
-    facebookUsername: '',
-    facebookProfile: '',
-    facebookFollowers: '',
-    youtubeUsername: '',
-    youtubeChannel: '',
-    youtubeFollowers: '',
-    engagementRatio: '',
-    
-    // Brand fields
-    businessName: '',
-    brandUsername: '',
-    companyLogo: null,
-    industryType: '',
-    companyType: '',
-    website: '',
-    district: '',
-    gstNumber: '',
-    socialMedia: {
-      instagram: '',
-      facebook: '',
-      linkedin: ''
+  // Redirect if no role selected
+  useEffect(() => {
+    if (!selectedRole) {
+      navigate('/register-step-1');
+    }
+  }, [selectedRole, navigate]);
+
+  // Initialize Formik with appropriate schema and initial values
+  const formik = useFormik({
+    initialValues: {
+      // Common fields
+      username: '',
+      email: '',
+      mobile: '',
+      password: '',
+      confirmPassword: '',
+      state: '',
+      city: '',
+      acceptedTerms: false,
+      acceptedPrivacy: false,
+      
+      // Brand-specific fields
+      ...(selectedRole === 'brand' && {
+        businessName: '',
+        companyType: '',
+      }),
+      
+      // Creator-specific fields
+      ...(selectedRole === 'creator' && {
+        name: '',
+      }),
     },
-    adminName: '',
-    designation: '',
-    employeeId: '',
-    adminMobile: { countryCode: '+91', number: '' },
-    adminEmail: ''
+    validationSchema: selectedRole === 'brand' ? brandRegistrationSchema : creatorRegistrationSchema,
+    validateOnChange: true,
+    validateOnBlur: true,
+    onSubmit: async (values) => {
+      setIsSubmitting(true);
+      setApiError('');
+
+      try {
+        let response;
+        
+        if (selectedRole === 'brand') {
+          response = await authService.signupBrand({
+            businessName: values.businessName,
+            username: values.username,
+            email: values.email,
+            mobile: values.mobile,
+            password: values.password,
+            companyType: values.companyType,
+            state: values.state,
+            city: values.city,
+          });
+        } else {
+          response = await authService.signupCreator({
+            name: values.name,
+            username: values.username,
+            email: values.email,
+            mobile: values.mobile,
+            password: values.password,
+            state: values.state,
+            city: values.city,
+          });
+        }
+
+        // Navigate to verification page on success
+        navigate('/usermail-verification', {
+          state: {
+            email: values.email,
+            mobile: values.mobile,
+            role: selectedRole,
+            message: 'Registration successful! Please verify your email and mobile to continue.',
+          },
+        });
+      } catch (error) {
+        console.error('Registration error:', error);
+        setApiError(error.message || 'Registration failed. Please try again.');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
   });
 
-  const [errors, setErrors] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (!location?.state?.role) {
-      navigate('/register-step-1', { replace: true });
-    }
-  }, [location?.state, navigate]);
-
-  const handleChange = (field, value, error = '') => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (error) {
-      setErrors(prev => ({ ...prev, [field]: error }));
-    } else if (errors?.[field]) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors?.[field];
-        return newErrors;
-      });
-    }
-  };
-
-  const handleImageChange = (imageData) => {
-    setFormData(prev => ({ ...prev, profileImage: imageData }));
-    if (errors?.profileImage) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors?.profileImage;
-        return newErrors;
-      });
-    }
-  };
-
-  const handleSubmit = async () => {
-    setIsSubmitting(true);
-
+  const handleFieldChange = (field, value) => {
+    formik.setFieldValue(field, value);
+    // Mark field as touched to trigger validation
+    formik.setFieldTouched(field, true, false);
+    // Manually validate the field
     setTimeout(() => {
-      console.log('Registration data:', { ...formData, role: selectedRole });
-      setIsSubmitting(false);
-      navigate('/user-verification', { 
-        state: { 
-          email: formData?.email,
-          role: selectedRole,
-          message: 'Registration successful! Please verify your email to continue.'
-        } 
-      });
-    }, 2000);
+      formik.validateField(field);
+    }, 0);
   };
 
   const handleBack = () => {
     navigate('/register-step-1');
   };
 
+  if (!selectedRole) {
+    return null;
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-secondary/5 to-accent/5">
-      <Header />
-      <div className="pt-24 pb-16 px-4">
-        <div className="max-w-4xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <div className="bg-card rounded-2xl shadow-elevation-3 p-6 md:p-8 lg:p-10">
-              <div className="mb-8">
-                <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
-                  {selectedRole === 'brand' ? 'Brand Registration' : 'Creator Registration'}
-                </h1>
-                <p className="text-muted-foreground">
-                  {selectedRole === 'brand' ?'Complete your brand profile to connect with influencers' :'Share your creator profile to start collaborating with brands'}
-                </p>
+    <div className="min-h-screen bg-background">
+      <PublicHeader />
+      
+      <div className="max-w-4xl mx-auto px-6 py-12">
+        <div className="bg-card rounded-2xl shadow-lg p-8 border border-border relative">
+          {/* API Error Message */}
+          {apiError && (
+            <div className="mb-6 p-4 rounded-lg bg-destructive/10 border border-destructive/20">
+              <p className="text-sm text-destructive">{apiError}</p>
+            </div>
+          )}
+
+          {/* Loading Overlay */}
+          {isSubmitting && (
+            <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center rounded-2xl z-50">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-foreground font-medium">Creating your account...</p>
               </div>
-
-              {selectedRole === 'brand' ? (
-                <BrandRegistrationForm
-                  formData={formData}
-                  errors={errors}
-                  onChange={handleChange}
-                  onImageChange={handleImageChange}
-                  onSubmit={handleSubmit}
-                  onBack={handleBack}
-                />
-              ) : (
-                <CreatorRegistrationForm
-                  formData={formData}
-                  errors={errors}
-                  onChange={handleChange}
-                  onImageChange={handleImageChange}
-                  onSubmit={handleSubmit}
-                  onBack={handleBack}
-                />
-              )}
             </div>
+          )}
 
-            <div className="mt-6 flex items-center justify-center gap-2 text-sm text-muted-foreground">
-              <Icon name="Shield" size={16} />
-              <span>Your information is secure and encrypted</span>
-            </div>
-          </motion.div>
+          {selectedRole === 'brand' ? (
+            <BrandRegistrationForm
+              formData={formik.values}
+              errors={formik.errors}
+              onChange={handleFieldChange}
+              onSubmit={formik.handleSubmit}
+              onBack={handleBack}
+            />
+          ) : (
+            <CreatorRegistrationForm
+              formData={formik.values}
+              errors={formik.errors}
+              onChange={handleFieldChange}
+              onSubmit={formik.handleSubmit}
+              onBack={handleBack}
+            />
+          )}
         </div>
       </div>
     </div>
